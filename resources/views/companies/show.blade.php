@@ -1,0 +1,111 @@
+@extends('layouts.app')
+@section('content')
+<?php $errors = Session::has('errors') ? Session::get('errors') : $errors; ?>
+  <div class="col-md-9 col-lg-9 col-sm-9 pull-left">
+
+    <div class="jumbotron">
+      <div class="container">
+        <h1 class="display-3">{{$company->name}}</h1>
+        <p>Created by: <strong><a href="users/{{$company->user->id}}">{{ $company->user->name }}</a></strong></p>
+        <p>Description: <strong> {{ $company->description }} </strong></p>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row col-md-9 col-lg-9 col-sm-9 pull-left"
+        style="background: white; margin-bottom: 20px; border:solid 1px #e3e3e3; border-radius: 10px;">
+
+        <h2><i class="fas fa-paperclip"></i> Projects</h2>
+        @foreach($company->projects as $project)
+          <div class="col-md-4">
+            <h2>{{ $project->name }}</h2>
+            <p>{{ $project->description }}</p>
+            <p><a class="btn btn-primary" href="{{ route('projects.show', $project->id) }}" role="button">View Project &raquo;</a></p>
+          </div>
+        @endforeach
+      </div>
+
+      @include('partials.comments')
+
+      <div class="row col-md-9 col-lg-9 col-sm-9 pull-left"
+      style="background: white; margin-top: 20px; margin-bottom: 20px; border:solid 1px #e3e3e3; border-radius: 10px;">
+
+        <div class="row container-fluid">
+          <form method="post" action="{{ route('comments.store') }}" enctype='multipart/form-data'>
+            {{ csrf_field() }}
+
+            <input type="hidden" name="commentable_type" value="App\Company">
+            <input type="hidden" name="commentable_id" value="{{ $company->id }}">
+
+            <h2><i class="far fa-plus-square"></i> Add a comment</h2>
+            <div class="form-group @if($errors->has('url')) has-error @endif">
+              <label for="comment-content">Work done (url/title)</label>
+              <textarea placeholder="Enter url/title"
+                      style="resize: vertical;"
+                      id="comment-content"
+                      name="url"
+                      rows="2"
+                      spellcheck="false"
+                      class="form-control autosize-target text-left">
+              </textarea>
+            </div>
+
+            <div class="form-group @if($errors->has('body')) has-error @endif">
+              <label for="comment-content">Comment</label>
+              <textarea placeholder="Enter comment"
+                      style="resize: vertical;"
+                      id="comment-content"
+                      name="body"
+                      rows="3"
+                      spellcheck="false"
+                      class="form-control autosize-target text-left">
+              </textarea>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Submit"/>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div> <!-- /container -->
+  </div>
+
+  <div class="col-sm-3 col-md-3 col-lg-3 ">
+
+    <div class="sidebar-module">
+      <h4>Actions</h4>
+      <ol class="list-unstyled">
+        @if(Auth::user()->id == $company->user->id || auth()->user()->can('edit_company'))
+          <li><a href="{{ route('companies.edit', $company->id) }}"><i class="fas fa-edit"></i> Edit</a></li>
+        @endif
+        @if(Auth::user()->id == $company->user->id || auth()->user()->can('create_project'))
+          <li><a href="{{ route('projects.create', ['company_id' => $company->id]) }}"><i class="fas fa-plus-circle"></i> Add Project</a></li>
+        @endif
+          <li><a href="{{ route('companies.index') }}"><i class="fas fa-list-ul"></i> List of Companies</a></li>
+
+        @if(Auth::user()->id == $company->user->id || auth()->user()->can('delete_company'))
+          <li>
+
+            <a href=""
+              onclick="var result = confirm('Are you sure you want to delete this Project?');
+                if (result) {
+                    event.preventDefault();
+                    document.getElementById('delete-form').submit();
+                }
+            ">
+              <i class="fas fa-trash-alt"></i> Delete
+            </a>
+
+            <form id="delete-form" action="{{ route('companies.destroy', $company->id) }}"
+              method="POST" style="display: none;">
+                {{ method_field('DELETE') }}
+                {{ csrf_field() }}
+            </form>
+          </li>
+        @endif
+      </ol>
+    </div>
+  </div>
+@endsection
